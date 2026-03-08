@@ -1,0 +1,134 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  passwordHash String
+  name        String
+  region      String   // NG or RW
+  role        String   // agripreneur, mentor, admin
+  mfaSecret   String?
+
+  agripreneur Agripreneur?
+  mentor      Mentor?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Agripreneur {
+  id               String   @id @default(cuid())
+  user             User     @relation(fields: [userId], references: [id])
+  userId           String   @unique
+  cropInterest     String?
+  skillLevel       String?
+  enrolledModules  LearningEnrollment[]
+  aiBotSessions    AIBotSession[]
+  marketplaceItems MarketplaceListing[]
+  analytics        CropAnalytics[]
+}
+
+model Mentor {
+  id                  String   @id @default(cuid())
+  user                User     @relation(fields: [userId], references: [id])
+  userId              String   @unique
+  expertise           String?
+  yearsOfExperience   Int?
+  assignedAgripreneurs Agripreneur[] @relation("MentorToAgripreneur")
+  sessions            AIBotSession[]
+}
+
+model Administrator {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String @unique
+}
+
+model AIBotSession {
+  id                 String   @id @default(cuid())
+  agripreneur       Agripreneur @relation(fields: [agripreneurId], references: [id])
+  agripreneurId     String
+  mentor            Mentor?  @relation(fields: [mentorId], references: [id])
+  mentorId          String?
+  conversationJson  String   // serialized conversation history
+  createdAt         DateTime @default(now())
+}
+
+model MarketplaceListing {
+  id              String   @id @default(cuid())
+  owner           Agripreneur @relation(fields: [ownerId], references: [id])
+  ownerId         String
+  equipmentName   String
+  condition       String
+  price           Float
+  transactionType String   // rent or sale
+  geolocation     String?
+  isVerified      Boolean  @default(false)
+  payment         Payment?
+  createdAt       DateTime @default(now())
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  listing   MarketplaceListing @relation(fields: [listingId], references: [id])
+  listingId String   @unique
+  payer     User     @relation(fields: [payerId], references: [id])
+  payerId   String
+  amount    Float
+  currency  String
+  gateway   String
+  status    String
+  createdAt DateTime @default(now())
+}
+
+model CropAnalytics {
+  id                 String   @id @default(cuid())
+  agripreneur       Agripreneur @relation(fields: [agripreneurId], references: [id])
+  agripreneurId     String
+  cropType          String
+  soilHealthIndex   Float?
+  historicalYield   Float?
+  currentMarketPrice Float?
+  region            String
+  notification      Notification?
+  createdAt         DateTime @default(now())
+}
+
+model LearningModule {
+  id             String   @id @default(cuid())
+  title          String
+  content        String
+  cropValueChain String
+  durationMinutes Int
+  difficultyLevel String
+  enrollments    LearningEnrollment[]
+}
+
+model LearningEnrollment {
+  id              String         @id @default(cuid())
+  agripreneur     Agripreneur    @relation(fields: [agripreneurId], references: [id])
+  agripreneurId   String
+  module          LearningModule @relation(fields: [moduleId], references: [id])
+  moduleId        String
+  progressPercent Int            @default(0)
+  completed       Boolean        @default(false)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  type      String
+  content   String
+  channel   String   // sms or push
+  sentAt    DateTime @default(now())
+  analytics CropAnalytics? @relation(fields: [analyticsId], references: [id])
+  analyticsId String?
+}
+
