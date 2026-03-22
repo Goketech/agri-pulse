@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { apiFetch } from "../../lib/api";
 
 const regions = [
   { value: "NG", label: "Nigeria" },
@@ -19,28 +22,36 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [region, setRegion] = useState("NG");
   const [role, setRole] = useState("agripreneur");
+  const [cropInterest, setCropInterest] = useState("");
+  const [expertise, setExpertise] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccess(null);
     try {
-      const res = await fetch("http://localhost:4000/auth/register", {
+      const res = await apiFetch("/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, region, role }),
+        body: JSON.stringify({
+          name,
+          email,
+          password,
+          region,
+          role,
+          ...(role === "agripreneur" && { cropInterest }),
+          ...(role === "mentor" && { expertise, cropValueChain: cropInterest }),
+        }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Registration failed");
+        setError(typeof data.error === "string" ? data.error : "Registration failed");
       } else {
-        setSuccess("Account created. You can now log in.");
+        router.push("/auth/login?registered=true");
       }
-    } catch (err) {
+    } catch {
       setError("Network error");
     } finally {
       setLoading(false);
@@ -55,33 +66,31 @@ export default function RegisterPage() {
       </p>
       <form onSubmit={handleSubmit} className="mt-4 space-y-4">
         <div>
-          <label className="block text-xs font-medium text-slate-300">
-            Full name
-          </label>
+          <label className="block text-xs font-medium text-slate-300">Full name</label>
           <input
             type="text"
+            required
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-300">
-            Email
-          </label>
+          <label className="block text-xs font-medium text-slate-300">Email</label>
           <input
             type="email"
+            required
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-300">
-            Password
-          </label>
+          <label className="block text-xs font-medium text-slate-300">Password</label>
           <input
             type="password"
+            required
+            minLength={6}
             className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -89,50 +98,72 @@ export default function RegisterPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-xs font-medium text-slate-300">
-              Region
-            </label>
+            <label className="block text-xs font-medium text-slate-300">Region</label>
             <select
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
               value={region}
               onChange={(e) => setRegion(e.target.value)}
             >
               {regions.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
+                <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-300">
-              Role
-            </label>
+            <label className="block text-xs font-medium text-slate-300">Role</label>
             <select
               className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
               value={role}
               onChange={(e) => setRole(e.target.value)}
             >
               {roles.map((r) => (
-                <option key={r.value} value={r.value}>
-                  {r.label}
-                </option>
+                <option key={r.value} value={r.value}>{r.label}</option>
               ))}
             </select>
           </div>
         </div>
 
-        {error && (
-          <p className="text-xs text-red-400" role="alert">
-            {error}
-          </p>
-        )}
-        {success && (
-          <p className="text-xs text-emerald-400" role="status">
-            {success}
-          </p>
+        {role === "agripreneur" && (
+          <div>
+            <label className="block text-xs font-medium text-slate-300">Crop interest</label>
+            <input
+              type="text"
+              placeholder="e.g. cassava, maize, coffee"
+              className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
+              value={cropInterest}
+              onChange={(e) => setCropInterest(e.target.value)}
+            />
+          </div>
         )}
 
+        {role === "mentor" && (
+          <>
+            <div>
+              <label className="block text-xs font-medium text-slate-300">Expertise</label>
+              <input
+                type="text"
+                placeholder="e.g. Soil science, Agribusiness"
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
+                value={expertise}
+                onChange={(e) => setExpertise(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-300">Crop value chain</label>
+              <input
+                type="text"
+                placeholder="e.g. cassava, rice"
+                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
+                value={cropInterest}
+                onChange={(e) => setCropInterest(e.target.value)}
+              />
+            </div>
+          </>
+        )}
+
+        {error && (
+          <p className="text-xs text-red-400" role="alert">{error}</p>
+        )}
         <button
           type="submit"
           disabled={loading}
@@ -141,7 +172,12 @@ export default function RegisterPage() {
           {loading ? "Creating account..." : "Create account"}
         </button>
       </form>
+      <p className="mt-4 text-center text-xs text-slate-400">
+        Already have an account?{" "}
+        <Link href="/auth/login" className="text-brand-400 hover:text-brand-300">
+          Login
+        </Link>
+      </p>
     </div>
   );
 }
-

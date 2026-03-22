@@ -1,0 +1,7 @@
+{
+  "name": "@agripulse/shared",
+  "version": "1.0.0",
+  "main": "src/types/domain.ts",
+  "types": "src/types/domain.ts",
+  "license": "ISC"
+}
