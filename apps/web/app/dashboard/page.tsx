@@ -74,17 +74,17 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6">
       {isAuthenticated && (
-        <section className="rounded-xl border border-slate-800 bg-gradient-to-r from-slate-900 to-emerald-900/20 p-4">
-          <h2 className="text-base font-semibold text-slate-100">
+        <section className="rounded-2xl border border-slate-200 bg-gradient-to-r from-white to-brand-50/60 p-5 shadow-sm dark:border-slate-800 dark:from-slate-900 dark:to-emerald-900/20">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">
             Welcome back, {user?.name?.split(" ")[0]}
           </h2>
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             {user?.region === "NG" ? "Nigeria" : "Rwanda"} · {user?.role}
           </p>
-          <div className="mt-2 flex gap-2">
+          <div className="mt-3 flex gap-2">
             <Link
               href="/auth/mfa"
-              className="rounded-md border border-slate-700 px-3 py-1 text-xs text-slate-300 hover:border-brand-400 hover:text-brand-300"
+              className="rounded-full border border-slate-300 bg-white px-3 py-1 text-xs font-medium text-slate-600 hover:border-brand-500 hover:text-brand-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:text-brand-300"
             >
               Security Settings
             </Link>
@@ -94,24 +94,24 @@ export default function DashboardPage() {
 
       {notifications.length > 0 && (
         <section>
-          <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
+          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
             Notifications
           </h3>
           <div className="space-y-2">
             {notifications.map((n) => (
               <div
                 key={n.id}
-                className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-900/70 px-4 py-3"
+                className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm dark:border-slate-800 dark:bg-slate-900/70"
               >
                 <div>
-                  <p className="text-sm text-slate-200">{n.content}</p>
-                  <p className="text-[10px] text-slate-500">
+                  <p className="text-sm text-slate-800 dark:text-slate-200">{n.content}</p>
+                  <p className="text-[10px] text-slate-500 dark:text-slate-500">
                     {n.type} · {n.channel} · {new Date(n.sentAt).toLocaleDateString()}
                   </p>
                 </div>
                 <button
                   onClick={() => markRead(n.id)}
-                  className="text-xs text-slate-400 hover:text-brand-400"
+                  className="text-xs font-medium text-slate-500 hover:text-brand-500 dark:text-slate-400 dark:hover:text-brand-400"
                 >
                   Dismiss
                 </button>
@@ -126,14 +126,14 @@ export default function DashboardPage() {
           <Link
             key={card.title}
             href={card.href}
-            className="group rounded-xl border border-slate-800 bg-slate-900/70 p-4 transition hover:border-brand-400 hover:bg-slate-900"
+            className="group rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-brand-500 hover:shadow-md dark:border-slate-800 dark:bg-slate-900/70 dark:hover:bg-slate-900"
           >
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-400 group-hover:text-brand-300">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 group-hover:text-brand-600 dark:text-slate-400 dark:group-hover:text-brand-300">
               {card.title}
             </h2>
-            <p className="mt-1 text-sm text-slate-300">{card.description}</p>
+            <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{card.description}</p>
             <p className="mt-2 text-xs text-slate-500">{card.stat}</p>
-            <span className="mt-3 inline-flex text-xs font-medium text-brand-300 group-hover:text-brand-200">
+            <span className="mt-4 inline-flex text-xs font-semibold text-brand-600 group-hover:text-brand-500 dark:text-brand-300 dark:group-hover:text-brand-200">
               Open →
             </span>
           </Link>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../lib/auth-context";
 import { apiFetch } from "../lib/api";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 interface AnalyticsEntry {
   id: string;
@@ -29,6 +30,68 @@ interface CropSummary {
   avgYield: number;
   latestPrice: number;
   entries: number;
+}
+
+function MiniBars({ summaries }: { summaries: CropSummary[] }) {
+  const top = [...summaries].sort((a, b) => b.latestPrice - a.latestPrice).slice(0, 6);
+  const max = Math.max(...top.map((s) => s.latestPrice), 1);
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Price Comparison</h4>
+      <div className="mt-3 space-y-2">
+        {top.map((s) => (
+          <div key={s.cropType} className="space-y-1">
+            <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
+              <span className="capitalize">{s.cropType}</span>
+              <span>{s.latestPrice.toLocaleString()}</span>
+            </div>
+            <div className="h-2 rounded-full bg-slate-200 dark:bg-slate-800">
+              <div
+                className="h-2 rounded-full bg-gradient-to-r from-brand-400 to-brand-600 transition-all duration-700"
+                style={{ width: `${Math.max(6, (s.latestPrice / max) * 100)}%` }}
+              />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function TrendLine({ analytics }: { analytics: AnalyticsEntry[] }) {
+  const points = analytics
+    .filter((a) => a.currentMarketPrice != null)
+    .slice(0, 10)
+    .reverse();
+  if (points.length < 2) return null;
+
+  const min = Math.min(...points.map((p) => p.currentMarketPrice || 0));
+  const max = Math.max(...points.map((p) => p.currentMarketPrice || 0));
+  const span = Math.max(1, max - min);
+
+  const path = points
+    .map((p, idx) => {
+      const x = (idx / (points.length - 1)) * 100;
+      const y = 100 - (((p.currentMarketPrice || 0) - min) / span) * 100;
+      return `${x},${y}`;
+    })
+    .join(" ");
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+      <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">Recent Price Trend</h4>
+      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Last {points.length} price points</p>
+      <svg viewBox="0 0 100 100" className="mt-3 h-36 w-full">
+        <polyline
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          className="text-brand-500"
+          points={path}
+        />
+      </svg>
+    </div>
+  );
 }
 
 export default function AnalyticsPage() {
@@ -105,9 +168,9 @@ export default function AnalyticsPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900/70">
         <h2 className="text-lg font-semibold">Crop Analytics</h2>
-        <p className="mt-2 text-sm text-slate-400">Please log in to view analytics.</p>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Please log in to view analytics.</p>
       </div>
     );
   }
@@ -115,7 +178,7 @@ export default function AnalyticsPage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-slate-50">Crop Analytics</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">Crop Analytics</h2>
         <div className="flex gap-2">
           {[
             { code: "NG", label: "Lagos, Nigeria" },
@@ -127,7 +190,7 @@ export default function AnalyticsPage() {
               className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
                 region === r.code
                   ? "bg-brand-500 text-slate-950"
-                  : "border border-slate-700 text-slate-300 hover:border-brand-400"
+                  : "border border-slate-300 text-slate-700 hover:border-brand-400 dark:border-slate-700 dark:text-slate-300"
               }`}
             >
               {r.label}
@@ -144,7 +207,7 @@ export default function AnalyticsPage() {
 
       {alerts.length > 0 && (
         <div className="space-y-2">
-          <h3 className="text-sm font-semibold text-slate-300">Price Alerts</h3>
+          <h3 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Price Alerts</h3>
           {alerts.map((a) => (
             <div
               key={a.id}
@@ -155,7 +218,7 @@ export default function AnalyticsPage() {
               }`}
             >
               <div className="flex items-center justify-between">
-                <span className="font-medium text-slate-200">{a.cropType}</span>
+                <span className="font-medium text-slate-800 dark:text-slate-200">{a.cropType}</span>
                 <span
                   className={`text-sm font-semibold ${
                     a.changePercent > 0 ? "text-brand-400" : "text-red-400"
@@ -165,7 +228,7 @@ export default function AnalyticsPage() {
                   {a.changePercent}%
                 </span>
               </div>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 {a.previousPrice.toLocaleString()} → {a.currentPrice.toLocaleString()} ({a.region === "NG" ? "NGN" : "RWF"})
               </p>
             </div>
@@ -174,15 +237,15 @@ export default function AnalyticsPage() {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 space-y-3">
+        <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-slate-300">Crop type</label>
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">Crop type</label>
               <input
                 type="text"
                 required
                 placeholder="e.g. cassava, maize"
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
+                className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-400 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
                 value={form.cropType}
                 onChange={(e) => setForm({ ...form, cropType: e.target.value })}
               />
@@ -240,24 +303,28 @@ export default function AnalyticsPage() {
 
       {summaries.length > 0 && (
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-slate-300">
+          <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">
             Crop Summary — {region === "NG" ? "Lagos, Nigeria" : "Kigali, Rwanda"}
           </h3>
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 lg:grid-cols-2">
+            <MiniBars summaries={summaries} />
+            <TrendLine analytics={analytics} />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-3">
             {summaries.map((s) => (
-              <div key={s.cropType} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
-                <h4 className="font-medium text-slate-100 capitalize">{s.cropType}</h4>
+              <div key={s.cropType} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+                <h4 className="font-medium text-slate-900 dark:text-slate-100 capitalize">{s.cropType}</h4>
                 <div className="mt-2 space-y-1 text-xs">
                   <div className="flex justify-between">
                     <span className="text-slate-400">Avg Soil Health</span>
-                    <span className="text-slate-200">{s.avgSoilHealth}</span>
+                    <span className="text-slate-700 dark:text-slate-200">{s.avgSoilHealth}</span>
                   </div>
-                  <div className="w-full rounded-full bg-slate-800 h-1.5">
+                  <div className="h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-800">
                     <div className="h-1.5 rounded-full bg-brand-500" style={{ width: `${s.avgSoilHealth}%` }} />
                   </div>
                   <div className="flex justify-between pt-1">
                     <span className="text-slate-400">Avg Yield</span>
-                    <span className="text-slate-200">{s.avgYield} t/ha</span>
+                    <span className="text-slate-700 dark:text-slate-200">{s.avgYield} t/ha</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Latest Price</span>
@@ -267,7 +334,7 @@ export default function AnalyticsPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-slate-400">Data Points</span>
-                    <span className="text-slate-200">{s.entries}</span>
+                    <span className="text-slate-700 dark:text-slate-200">{s.entries}</span>
                   </div>
                 </div>
               </div>
@@ -278,10 +345,10 @@ export default function AnalyticsPage() {
 
       {analytics.length > 0 && (
         <div>
-          <h3 className="mb-3 text-sm font-semibold text-slate-300">Recent Entries</h3>
-          <div className="overflow-x-auto rounded-xl border border-slate-800">
+          <h3 className="mb-3 text-sm font-semibold text-slate-700 dark:text-slate-300">Recent Entries</h3>
+          <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
             <table className="w-full text-sm">
-              <thead className="bg-slate-900/80">
+              <thead className="bg-slate-100 dark:bg-slate-900/80">
                 <tr className="text-xs text-slate-400">
                   <th className="px-4 py-2 text-left">Crop</th>
                   <th className="px-4 py-2 text-right">Soil Health</th>
@@ -293,9 +360,9 @@ export default function AnalyticsPage() {
               <tbody>
                 {analytics.slice(0, 20).map((a) => (
                   <tr key={a.id} className="border-t border-slate-800/50">
-                    <td className="px-4 py-2 capitalize text-slate-200">{a.cropType}</td>
-                    <td className="px-4 py-2 text-right text-slate-300">{a.soilHealthIndex ?? "—"}</td>
-                    <td className="px-4 py-2 text-right text-slate-300">{a.historicalYield ?? "—"}</td>
+                    <td className="px-4 py-2 capitalize text-slate-700 dark:text-slate-200">{a.cropType}</td>
+                    <td className="px-4 py-2 text-right text-slate-600 dark:text-slate-300">{a.soilHealthIndex ?? "—"}</td>
+                    <td className="px-4 py-2 text-right text-slate-600 dark:text-slate-300">{a.historicalYield ?? "—"}</td>
                     <td className="px-4 py-2 text-right text-brand-300">
                       {a.currentMarketPrice?.toLocaleString() ?? "—"}
                     </td>
@@ -310,8 +377,14 @@ export default function AnalyticsPage() {
         </div>
       )}
 
+      {loading && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+          <LoadingSpinner label="Fetching analytics insights..." />
+        </div>
+      )}
+
       {!loading && analytics.length === 0 && summaries.length === 0 && (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900/70">
           <p className="text-sm text-slate-500">No analytics data yet. Add your first crop data entry above.</p>
         </div>
       )}

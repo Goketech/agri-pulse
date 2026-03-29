@@ -53,7 +53,8 @@ router.post("/chat", requireAuth, async (req, res) => {
         max_tokens: 500,
       });
       assistantMessage = completion.choices[0].message.content || "I could not generate a response.";
-    } catch {
+    } catch (error) {
+      console.error(error);
       assistantMessage = "AI service is temporarily unavailable. Please try again later.";
     }
   } else {

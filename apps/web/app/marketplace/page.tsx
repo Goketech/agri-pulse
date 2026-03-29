@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "../lib/auth-context";
 import { apiFetch } from "../lib/api";
+import LoadingSpinner from "../components/LoadingSpinner";
 
 interface Listing {
   id: string;
@@ -106,9 +107,9 @@ export default function MarketplacePage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center">
+      <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900/70">
         <h2 className="text-lg font-semibold">P2P Marketplace</h2>
-        <p className="mt-2 text-sm text-slate-400">Please log in to browse and list equipment.</p>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Please log in to browse and list equipment.</p>
       </div>
     );
   }
@@ -116,18 +117,18 @@ export default function MarketplacePage() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <h2 className="text-lg font-semibold text-slate-50">P2P Marketplace</h2>
+        <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-50">P2P Marketplace</h2>
         <div className="flex flex-1 gap-2">
           <input
             type="text"
             placeholder="Search equipment..."
-            className="flex-1 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-400 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && fetchListings()}
           />
           <select
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50"
+            className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
             value={typeFilter}
             onChange={(e) => { setTypeFilter(e.target.value); }}
           >
@@ -135,7 +136,7 @@ export default function MarketplacePage() {
             <option value="sale">For sale</option>
             <option value="rent">For rent</option>
           </select>
-          <button onClick={fetchListings} className="rounded-lg bg-slate-800 px-3 py-2 text-sm text-slate-300 hover:bg-slate-700">
+          <button onClick={fetchListings} className="rounded-lg bg-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-300 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700">
             Search
           </button>
         </div>
@@ -148,14 +149,14 @@ export default function MarketplacePage() {
       </div>
 
       {showForm && (
-        <form onSubmit={handleCreate} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-4 space-y-3">
+        <form onSubmit={handleCreate} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 dark:border-slate-800 dark:bg-slate-900/70">
           <div className="grid gap-3 md:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-slate-300">Equipment name</label>
+              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300">Equipment name</label>
               <input
                 type="text"
                 required
-                className="mt-1 w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 focus:border-brand-400 focus:outline-none"
+                className="mt-1 w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-brand-400 focus:outline-none dark:border-slate-700 dark:bg-slate-950 dark:text-slate-50"
                 value={form.equipmentName}
                 onChange={(e) => setForm({ ...form, equipmentName: e.target.value })}
               />
@@ -236,18 +237,20 @@ export default function MarketplacePage() {
       )}
 
       {loading ? (
-        <p className="text-sm text-slate-400">Loading listings...</p>
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
+          <LoadingSpinner label="Loading marketplace listings..." />
+        </div>
       ) : listings.length === 0 ? (
-        <div className="rounded-2xl border border-slate-800 bg-slate-900/70 p-8 text-center">
+        <div className="rounded-2xl border border-slate-200 bg-white p-8 text-center dark:border-slate-800 dark:bg-slate-900/70">
           <p className="text-sm text-slate-500">No listings yet. Be the first to list equipment!</p>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {listings.map((l) => (
-            <div key={l.id} className="rounded-xl border border-slate-800 bg-slate-900/70 p-4">
+            <div key={l.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900/70">
               <div className="flex items-start justify-between">
                 <div>
-                  <h3 className="font-medium text-slate-100">{l.equipmentName}</h3>
+                  <h3 className="font-medium text-slate-900 dark:text-slate-100">{l.equipmentName}</h3>
                   {l.isVerified && (
                     <span className="mt-0.5 inline-flex rounded-full bg-brand-500/10 px-2 py-0.5 text-[10px] font-medium text-brand-300">
                       Verified

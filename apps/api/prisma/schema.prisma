@@ -43,6 +43,7 @@ model Agripreneur {
   marketplaceItems MarketplaceListing[]
   analytics        CropAnalytics[]
   badges           Badge[]
+  quizAttempts     QuizAttempt[]
 }
 
 model Mentor {
@@ -132,7 +133,10 @@ model LearningModule {
   difficultyLevel String
   badgeName       String?
   enrollments     LearningEnrollment[]
+  lessons         Lesson[]
+  quiz            Quiz?
   createdAt       DateTime             @default(now())
+  updatedAt       DateTime             @updatedAt
 }
 
 model LearningEnrollment {
@@ -142,12 +146,71 @@ model LearningEnrollment {
   module          LearningModule @relation(fields: [moduleId], references: [id])
   moduleId        String
   progressPercent Int            @default(0)
+  currentLesson   Int            @default(0)
+  totalLessons    Int            @default(0)
+  timeSpentMinutes Int           @default(0)
+  lastViewedAt    DateTime?
   completed       Boolean        @default(false)
   completedAt     DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
   @@unique([agripreneurId, moduleId])
+}
+
+model Lesson {
+  id              String         @id @default(cuid())
+  module          LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  moduleId        String
+  order           Int
+  title           String
+  body            String
+  estimatedMinutes Int           @default(10)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@unique([moduleId, order])
+}
+
+model Quiz {
+  id          String         @id @default(cuid())
+  module      LearningModule @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  moduleId    String         @unique
+  title       String
+  description String?
+  passingScore Int           @default(70)
+  questions   QuizQuestion[]
+  attempts    QuizAttempt[]
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+}
+
+model QuizQuestion {
+  id           String   @id @default(cuid())
+  quiz         Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizId       String
+  order        Int
+  prompt       String
+  type         String   @default("single_choice")
+  optionsJson  String
+  correctIndex Int
+  explanation  String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([quizId, order])
+}
+
+model QuizAttempt {
+  id             String      @id @default(cuid())
+  agripreneur    Agripreneur @relation(fields: [agripreneurId], references: [id], onDelete: Cascade)
+  agripreneurId  String
+  quiz           Quiz        @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  quizId         String
+  score          Float
+  passed         Boolean
+  answersJson    String
+  createdAt      DateTime    @default(now())
 }
 
 model Badge {
