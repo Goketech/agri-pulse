@@ -1,5 +1,14 @@
 # AgriPulse API
 
+## Project links
+
+| | URL |
+|---|-----|
+| **Live app** | [https://agri-pulse-web-mu.vercel.app/](https://agri-pulse-web-mu.vercel.app/) |
+| **Demo video** | [https://youtu.be/dGjr-xKpPtA](https://youtu.be/dGjr-xKpPtA) |
+
+---
+
 ## Supabase: `P1001 Can't reach database server at db.*.supabase.co:5432`
 
 That hostname is the **direct** Postgres URL. Many networks cannot reach it (IPv6-only DNS, firewalls). **Do not use it locally** unless you have Supabase **IPv4 add-on** or an IPv6-capable network.
